@@ -68,7 +68,7 @@ import * as nc_078_mcp_tokens from '~/meta/migrations/v2/nc_078_mcp_tokens';
 import * as nc_079_cross_base_link from '~/meta/migrations/v2/nc_079_cross_base_link';
 import * as nc_080_sync_mappings from '~/meta/migrations/v2/nc_080_sync_mappings';
 import * as nc_081_audit from '~/meta/migrations/v2/nc_081_audit';
-import * as nc_081_links_v2 from '~/meta/migrations/v2/nc_081_links_v2';
+import * as nc_082_links_v2 from '~/meta/migrations/v2/nc_082_links_v2';
 
 // Create a custom migration source class
 export default class XcMigrationSourcev2 {
@@ -148,7 +148,7 @@ export default class XcMigrationSourcev2 {
       'nc_079_cross_base_link',
       'nc_080_sync_mappings',
       'nc_081_audit',
-      'nc_081_links_v2',
+      'nc_082_links_v2',
     ]);
   }
 
@@ -298,8 +298,8 @@ export default class XcMigrationSourcev2 {
         return nc_080_sync_mappings;
       case 'nc_081_audit':
         return nc_081_audit;
-      case 'nc_081_links_v2':
-        return nc_081_links_v2;
+      case 'nc_082_links_v2':
+        return nc_082_links_v2;
     }
   }
 }

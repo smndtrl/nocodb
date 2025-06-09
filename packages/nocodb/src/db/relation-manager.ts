@@ -69,6 +69,7 @@ export class RelationManager {
   ) {}
 
   protected auditUpdateObj: AuditUpdateLog[] = [];
+  protected linkedRelationManager: RelationManager[] = [];
 
   getRelationContext() {
     return this.relationContext;
@@ -385,8 +386,8 @@ export class RelationManager {
                 },
               );
               await relationManager.removeChild({ req });
-              // merge audit logs
-              this.auditUpdateObj.push(...relationManager.auditUpdateObj);
+              // keep this for audit log
+              this.linkedRelationManager.push(relationManager);
             }
           }
 
@@ -1004,21 +1005,27 @@ export class RelationManager {
   getAuditUpdateObj(req: any) {
     const { childTable, parentTable, childLTARColumn, parentLTARColumn } =
       this.relationContext;
-    return this.auditUpdateObj.map((log) => {
-      const ltarColumn =
-        log.direction === 'parent_child' ? childLTARColumn : parentLTARColumn;
-      const refLtarColumn =
-        log.direction === 'parent_child' ? parentLTARColumn : childLTARColumn;
+    const linkedAuditUpdateObj = [];
+    for (const linkedManager of this.linkedRelationManager) {
+      linkedAuditUpdateObj.push(...linkedManager.getAuditUpdateObj(req));
+    }
+    return linkedAuditUpdateObj.concat(
+      this.auditUpdateObj.map((log) => {
+        const ltarColumn =
+          log.direction === 'parent_child' ? childLTARColumn : parentLTARColumn;
+        const refLtarColumn =
+          log.direction === 'parent_child' ? parentLTARColumn : childLTARColumn;
 
-      return {
-        ...log,
-        model: log.direction === 'parent_child' ? parentTable : childTable,
-        refModel: log.direction === 'parent_child' ? childTable : parentTable,
-        columnTitle: ltarColumn.title,
-        refColumnTitle: refLtarColumn.title,
-        columnId: ltarColumn.id,
-        req,
-      } as AuditUpdateObj;
-    });
+        return {
+          ...log,
+          model: log.direction === 'parent_child' ? parentTable : childTable,
+          refModel: log.direction === 'parent_child' ? childTable : parentTable,
+          columnTitle: ltarColumn.title,
+          refColumnTitle: refLtarColumn.title,
+          columnId: ltarColumn.id,
+          req,
+        } as AuditUpdateObj;
+      }),
+    );
   }
 }

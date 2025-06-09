@@ -1519,7 +1519,6 @@ export function useInfiniteData(args: {
             UITypes.Lookup,
             UITypes.Rollup,
             UITypes.LinkToAnotherRecord,
-            UITypes.LinkToAnotherRecordV2,
           ].includes(c.uidt as UITypes),
         )
         .map((c) => c.title!) || []),

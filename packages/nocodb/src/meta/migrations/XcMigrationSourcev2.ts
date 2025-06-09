@@ -147,6 +147,8 @@ export default class XcMigrationSourcev2 {
       'nc_078_mcp_tokens',
       'nc_079_cross_base_link',
       'nc_080_sync_mappings',
+      'nc_081_audit',
+      'nc_081_links_v2',
     ]);
   }
 

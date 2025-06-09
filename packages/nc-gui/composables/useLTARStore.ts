@@ -108,6 +108,9 @@ const [useProvideLTARStore, useLTARStore] = useInjectionState(
     const isPublic: Ref<boolean> = inject(IsPublicInj, ref(false))
 
     const colOptions = computed(() => column.value?.colOptions as LinkToAnotherRecordType)
+    const type = computed(() =>
+      column.value?.uidt === UITypes.LinkToAnotherRecordV2 ? 'ln' : (colOptions.value?.type as RelationTypes),
+    )
 
     const { sharedView } = useSharedView()
 
@@ -420,7 +423,7 @@ const [useProvideLTARStore, useLTARStore] = useInjectionState(
             meta.value.base_id ?? baseId,
             meta.value.id,
             encodeURIComponent(rowId.value),
-            colOptions.value.type as RelationTypes,
+            type.value,
             column?.value?.id,
             {
               limit: String(childrenExcludedListPagination.size),
@@ -441,7 +444,7 @@ const [useProvideLTARStore, useLTARStore] = useInjectionState(
           // compare all keys and values
           childrenExcludedList.value.list.forEach((row: any, index: number) => {
             const found = (
-              [RelationTypes.BELONGS_TO, RelationTypes.ONE_TO_ONE].includes(colOptions.value.type)
+              [RelationTypes.BELONGS_TO, RelationTypes.ONE_TO_ONE].includes(type.value)
                 ? [activeState[column.value.title]]
                 : activeState[column.value.title]
             ).find((a: any) => {
@@ -480,7 +483,7 @@ const [useProvideLTARStore, useLTARStore] = useInjectionState(
 
       try {
         isChildrenLoading.value = true
-        if ([RelationTypes.BELONGS_TO, RelationTypes.ONE_TO_ONE].includes(colOptions.value.type)) return
+        if ([RelationTypes.BELONGS_TO, RelationTypes.ONE_TO_ONE].includes(type.value)) return
         if (!column.value) return
         let offset = childrenListPagination.size * (childrenListPagination.page - 1) + childrenListOffsetCount.value
         if (offset < 0 || resetOffset) {
@@ -525,7 +528,7 @@ const [useProvideLTARStore, useLTARStore] = useInjectionState(
             childrenList.value = await $api.public.dataNestedList(
               sharedView.value?.uuid as string,
               encodeURIComponent(rowId.value),
-              colOptions.value.type as RelationTypes,
+              type.value as RelationTypes,
               column.value.id,
               {
                 limit: String(childrenListPagination.size),
@@ -544,7 +547,7 @@ const [useProvideLTARStore, useLTARStore] = useInjectionState(
               meta.value?.base_id ?? ((base?.value?.id || (sharedView.value?.view as any)?.base_id) as string),
               meta.value.id,
               encodeURIComponent(rowId.value),
-              colOptions.value.type as RelationTypes,
+              type.value as RelationTypes,
               column?.value?.id,
               {
                 limit: String(limit ?? childrenListPagination.size),
@@ -641,7 +644,7 @@ const [useProvideLTARStore, useLTARStore] = useInjectionState(
           metaValue?.base_id ?? (base.value.id as string),
           metaValue.id!,
           encodeURIComponent(rowId.value),
-          colOptions.value.type as RelationTypes,
+          type.value as RelationTypes,
           column?.value?.id,
           encodeURIComponent(getRelatedTableRowId(row) as string),
         )
@@ -662,7 +665,7 @@ const [useProvideLTARStore, useLTARStore] = useInjectionState(
         }
         isChildrenExcludedListLinked.value[index] = false
         isChildrenListLinked.value[index] = false
-        if (colOptions.value.type !== RelationTypes.BELONGS_TO && colOptions.value.type !== RelationTypes.ONE_TO_ONE) {
+        if (type.value !== RelationTypes.BELONGS_TO && type.value !== RelationTypes.ONE_TO_ONE) {
           childrenListCount.value = childrenListCount.value - 1
         }
       } catch (e: any) {
@@ -712,7 +715,7 @@ const [useProvideLTARStore, useLTARStore] = useInjectionState(
           metaValue?.base_id ?? (base.value.id as string),
           metaValue.id as string,
           encodeURIComponent(rowId.value),
-          colOptions.value.type as RelationTypes,
+          type.value as RelationTypes,
           column?.value?.id,
           encodeURIComponent(getRelatedTableRowId(row) as string) as string,
         )
@@ -750,7 +753,7 @@ const [useProvideLTARStore, useLTARStore] = useInjectionState(
         isChildrenExcludedListLinked.value[index] = true
         isChildrenListLinked.value[index] = true
 
-        if (colOptions.value.type !== RelationTypes.BELONGS_TO && colOptions.value.type !== RelationTypes.ONE_TO_ONE) {
+        if (type.value !== RelationTypes.BELONGS_TO && type.value !== RelationTypes.ONE_TO_ONE) {
           childrenListCount.value = childrenListCount.value + 1
         } else {
           isChildrenExcludedListLinked.value = Array(childrenExcludedList.value?.list.length).fill(false)

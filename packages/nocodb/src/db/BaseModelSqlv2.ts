@@ -1864,7 +1864,11 @@ class BaseModelSqlv2 implements IBaseModelSqlV2 {
           this.context,
         );
 
-        switch (colOptions.type) {
+        const relType = isLTARMMOrMMLike(column)
+          ? RelationTypes.MANY_TO_MANY
+          : colOptions.type;
+
+        switch (relType) {
           case 'mm':
             {
               const mmTable = await Model.get(
@@ -3362,7 +3366,10 @@ class BaseModelSqlv2 implements IBaseModelSqlV2 {
         const { mmContext, refContext, childContext } =
           await colOptions.getParentChildContext(this.context);
 
-        switch (colOptions.type) {
+        const relType = isLTARMMOrMMLike(column)
+          ? RelationTypes.MANY_TO_MANY
+          : colOptions.type;
+        switch (relType) {
           case 'mm':
             {
               const mmTable = await Model.get(
@@ -3517,7 +3524,10 @@ class BaseModelSqlv2 implements IBaseModelSqlV2 {
 
         const childTn = childBaseModel.getTnPath(childTable);
 
-        switch (colOptions.type) {
+        const relType = isLTARMMOrMMLike(column)
+          ? RelationTypes.MANY_TO_MANY
+          : colOptions.type;
+        switch (relType) {
           case 'mm':
             {
               const vChildCol = await colOptions.getMMChildColumn(mmContext);

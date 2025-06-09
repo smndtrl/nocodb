@@ -1193,6 +1193,7 @@ export function useCanvasTable({
           UITypes.Barcode,
           UITypes.QrCode,
           UITypes.LinkToAnotherRecord,
+          UITypes.LinkToAnotherRecordV2,
           UITypes.Formula,
         ].includes(column.uidt)
       ) {

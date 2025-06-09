@@ -969,7 +969,7 @@ export function useInfiniteData(args: {
     if (!id) return
 
     for (const column of metaValue?.columns ?? []) {
-      if (column.uidt !== UITypes.LinkToAnotherRecord) continue
+      if (column.uidt !== UITypes.LinkToAnotherRecord && column.uidt !== UITypes.LinkToAnotherRecordV2) continue
 
       const colOptions = column.colOptions as LinkToAnotherRecordType
 
@@ -1519,6 +1519,7 @@ export function useInfiniteData(args: {
             UITypes.Lookup,
             UITypes.Rollup,
             UITypes.LinkToAnotherRecord,
+            UITypes.LinkToAnotherRecordV2,
           ].includes(c.uidt as UITypes),
         )
         .map((c) => c.title!) || []),

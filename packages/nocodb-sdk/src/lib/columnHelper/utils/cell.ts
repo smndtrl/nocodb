@@ -203,23 +203,14 @@ export const isMMOrMMLike = (
   );
 };
 
-export const getAuditRelation = (
-  column: ColumnType,
-  colOptions = column?.colOptions
-) => {
-  const baseRelationType = (colOptions as LinkToAnotherRecordType)
-    ?.type as RelationTypes;
-  if ((colOptions as LinkToAnotherRecordType)?.version === LinksVersion.V2) {
-    switch (baseRelationType) {
-      case RelationTypes.MANY_TO_ONE:
-        return RelationTypes.HAS_MANY;
-      case RelationTypes.ONE_TO_MANY:
-        return RelationTypes.BELONGS_TO;
-      default:
-        return baseRelationType;
-    }
-  } else {
-    return baseRelationType;
+export const getAuditRelation = (baseRelationType: RelationTypes) => {
+  switch (baseRelationType) {
+    case RelationTypes.MANY_TO_ONE:
+      return RelationTypes.HAS_MANY;
+    case RelationTypes.ONE_TO_MANY:
+      return RelationTypes.BELONGS_TO;
+    default:
+      return baseRelationType;
   }
 };
 

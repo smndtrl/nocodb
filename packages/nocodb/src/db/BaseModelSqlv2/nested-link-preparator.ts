@@ -383,7 +383,9 @@ export class NestedLinkPreparator {
                   refModel,
                   refDisplayValue: '',
                   displayValue: '',
-                  type: getAuditRelation(refChildCol),
+                  type: getAuditRelation(
+                    refChildCol.colOptions.type as RelationTypes,
+                  ),
                 });
 
                 await baseModel.afterAddChild({
@@ -397,7 +399,7 @@ export class NestedLinkPreparator {
                   refModel: baseModel.model,
                   refDisplayValue: '',
                   displayValue: '',
-                  type: getAuditRelation(col),
+                  type: getAuditRelation(col.colOptions.type as RelationTypes),
                 });
               }
               for (const unlink of unlinkedIds) {
@@ -412,7 +414,9 @@ export class NestedLinkPreparator {
                   refModel,
                   refDisplayValue: '',
                   displayValue: '',
-                  type: getAuditRelation(refChildCol),
+                  type: getAuditRelation(
+                    refChildCol.colOptions.type as RelationTypes,
+                  ),
                 });
                 await baseModel.afterRemoveChild({
                   columnTitle: refChildCol.title,
@@ -425,7 +429,7 @@ export class NestedLinkPreparator {
                   refModel: baseModel.model,
                   refDisplayValue: '',
                   displayValue: '',
-                  type: getAuditRelation(col),
+                  type: getAuditRelation(col.colOptions.type as RelationTypes),
                 });
               }
             });

@@ -1,5 +1,6 @@
 import {
   AuditOperationSubTypes,
+  getAuditRelation,
   isLinksOrLTAR,
   isLinkV2,
   isLTARMMOrMMLike,
@@ -16,6 +17,7 @@ import {
   _wherePk,
   getCompositePkValue,
   getOppositeRelationType,
+  getRelatedLinksColumn,
 } from '~/helpers/dbHelpers';
 import { getTargetTableRelColumn } from '~/helpers';
 
@@ -49,10 +51,12 @@ export class RelationManager {
       relationColOptions: LinkToAnotherRecordColumn;
       childTn: string | Knex.Raw<any>;
       childColumn: Column<any>;
+      childLTARColumn: Column<any>;
       childTable: Model;
       childBaseModel: IBaseModelSqlV2;
       parentTn: string | Knex.Raw<any>;
       parentColumn: Column<any>;
+      parentLTARColumn: Column<any>;
       parentTable: Model;
       parentBaseModel: IBaseModelSqlV2;
       childId: any;
@@ -123,17 +127,23 @@ export class RelationManager {
       dbDriver: baseModel.dbDriver,
       model: childTable,
     });
-
     return new RelationManager({
       baseModel,
       relationColumn: column,
       relationColOptions: colOptions,
       childTn: childBaseModel.getTnPath(childTable),
       childColumn,
+      childLTARColumn: getRelatedLinksColumn(
+        column,
+        RelationManager.isRelationReversed(column, colOptions)
+          ? parentTable
+          : childTable,
+      ),
       childTable,
       childBaseModel,
       parentTn: parentBaseModel.getTnPath(parentTable),
       parentColumn,
+      parentLTARColumn: column,
       parentTable,
       parentBaseModel,
       childId:
@@ -733,7 +743,7 @@ export class RelationManager {
       rowId: parentId,
       refRowId: childId,
       opSubType: AuditOperationSubTypes.LINK_RECORD,
-      type: colOptions.type as RelationTypes,
+      type: getAuditRelation(colOptions.type as RelationTypes),
       direction: 'parent_child',
     });
 
@@ -741,7 +751,7 @@ export class RelationManager {
       rowId: childId,
       refRowId: parentId,
       opSubType: AuditOperationSubTypes.LINK_RECORD,
-      type: getOppositeRelationType(colOptions.type),
+      type: getAuditRelation(getOppositeRelationType(colOptions.type)),
       direction: 'child_parent',
     });
 
@@ -923,18 +933,16 @@ export class RelationManager {
       rowId: parentId,
       refRowId: childId,
       opSubType: AuditOperationSubTypes.UNLINK_RECORD,
-      type: colOptions.type as RelationTypes,
+      type: getAuditRelation(colOptions.type as RelationTypes),
       direction: 'parent_child',
     });
-    if (parentTable.id !== childTable.id) {
-      this.auditUpdateObj.push({
-        rowId: childId,
-        refRowId: parentId,
-        opSubType: AuditOperationSubTypes.UNLINK_RECORD,
-        type: getOppositeRelationType(colOptions.type),
-        direction: 'child_parent',
-      });
-    }
+    this.auditUpdateObj.push({
+      rowId: childId,
+      refRowId: parentId,
+      opSubType: AuditOperationSubTypes.UNLINK_RECORD,
+      type: getAuditRelation(getOppositeRelationType(colOptions.type)),
+      direction: 'child_parent',
+    });
 
     await webhookHandler.finishUpdate();
   }
@@ -994,20 +1002,21 @@ export class RelationManager {
   }
 
   getAuditUpdateObj(req: any) {
-    const { childTable, parentTable, parentColumn, childColumn } =
+    const { childTable, parentTable, childLTARColumn, parentLTARColumn } =
       this.relationContext;
     return this.auditUpdateObj.map((log) => {
-      const column =
-        log.direction === 'parent_child' ? parentColumn : childColumn;
-      const refColumn =
-        log.direction === 'parent_child' ? childColumn : parentColumn;
+      const ltarColumn =
+        log.direction === 'parent_child' ? childLTARColumn : parentLTARColumn;
+      const refLtarColumn =
+        log.direction === 'parent_child' ? parentLTARColumn : childLTARColumn;
+
       return {
         ...log,
         model: log.direction === 'parent_child' ? parentTable : childTable,
         refModel: log.direction === 'parent_child' ? childTable : parentTable,
-        columnTitle: column.title,
-        refColumnTitle: refColumn.title,
-        columnId: column.id,
+        columnTitle: ltarColumn.title,
+        refColumnTitle: refLtarColumn.title,
+        columnId: ltarColumn.id,
         req,
       } as AuditUpdateObj;
     });

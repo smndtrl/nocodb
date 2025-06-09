@@ -1,4 +1,4 @@
-import { isMMOrMMLike, RelationTypes, UITypes } from 'nocodb-sdk';
+import { isLTARMMOrMMLike, RelationTypes, UITypes } from 'nocodb-sdk';
 import type { Knex } from 'knex';
 import type { IBaseModelSqlV2 } from '~/db/IBaseModelSqlV2';
 import type { QueryWithCte } from '~/helpers/dbHelpers';
@@ -82,7 +82,7 @@ export default async function generateLookupSelectQuery({
       const relation =
         await relationCol.getColOptions<LinkToAnotherRecordColumn>(context);
 
-      const isMMLike = isMMOrMMLike(column);
+      const isMMLike = isLTARMMOrMMLike(column);
 
       const {
         parentContext,
@@ -236,7 +236,7 @@ export default async function generateLookupSelectQuery({
         const relation =
           await relationCol.getColOptions<LinkToAnotherRecordColumn>(context);
 
-        let relationType = isMMOrMMLike(relationCol)
+        let relationType = isLTARMMOrMMLike(relationCol)
           ? RelationTypes.MANY_TO_MANY
           : relation.type;
 

@@ -69,7 +69,10 @@ export default async function generateLookupSelectQuery({
 
     if (column.uidt === UITypes.Lookup) {
       lookupColOpt = await column.getColOptions<LookupColumn>(context);
-    } else if (column.uidt !== UITypes.LinkToAnotherRecord) {
+    } else if (
+      column.uidt !== UITypes.LinkToAnotherRecord &&
+      column.uidt !== UITypes.LinkToAnotherRecordV2
+    ) {
       NcError.badRequest('Invalid field type');
     }
 
@@ -81,6 +84,8 @@ export default async function generateLookupSelectQuery({
         : column;
       const relation =
         await relationCol.getColOptions<LinkToAnotherRecordColumn>(context);
+
+      const isMMLike = column.uidt === UITypes.LinkToAnotherRecordV2;
 
       const {
         parentContext,
@@ -98,7 +103,7 @@ export default async function generateLookupSelectQuery({
           : RelationTypes.HAS_MANY;
       }
 
-      if (relationType === RelationTypes.BELONGS_TO) {
+      if (relationType === RelationTypes.BELONGS_TO && isMMLike) {
         const childColumn = await relation.getChildColumn(context);
         const parentColumn = await relation.getParentColumn(context);
         const childModel = await childColumn.getModel(childContext);
@@ -124,7 +129,7 @@ export default async function generateLookupSelectQuery({
             }`,
           ]),
         );
-      } else if (relationType === RelationTypes.HAS_MANY) {
+      } else if (relationType === RelationTypes.HAS_MANY  && !isMMLike) {
         isBtLookup = false;
         const childColumn = await relation.getChildColumn(context);
         const parentColumn = await relation.getParentColumn(context);
@@ -150,7 +155,7 @@ export default async function generateLookupSelectQuery({
             }`,
           ]),
         );
-      } else if (relationType === RelationTypes.MANY_TO_MANY) {
+      } else if (relationType === RelationTypes.MANY_TO_MANY || isMMLike) {
         isBtLookup = false;
         const childColumn = await relation.getChildColumn(context);
         const parentColumn = await relation.getParentColumn(context);

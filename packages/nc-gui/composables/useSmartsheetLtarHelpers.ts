@@ -1,4 +1,4 @@
-import { RelationTypes, isLinksOrLTAR } from 'nocodb-sdk'
+import { RelationTypes, isLinksOrLTAR, isMMOrMMLike } from 'nocodb-sdk'
 import type { ColumnType, LinkToAnotherRecordType, TableType } from 'nocodb-sdk'
 import type { Ref } from 'vue'
 
@@ -24,7 +24,7 @@ const [useProvideSmartsheetLtarHelpers, useSmartsheetLtarHelpers] = useInjection
 
     // actions
     const addLTARRef = async (row: Row, value: Record<string, any>, column: ColumnType) => {
-      if (isHm(column) || isMm(column)) {
+      if (isHm(column) || isMm(column) || isMMOrMMLike(column)) {
         if (!getRowLtarHelpers(row)[column.title!]) getRowLtarHelpers(row)[column.title!] = []
 
         if (getRowLtarHelpers(row)[column.title!]!.find((ln: Record<string, any>) => deepCompare(ln, value))) {
@@ -44,7 +44,7 @@ const [useProvideSmartsheetLtarHelpers, useSmartsheetLtarHelpers] = useInjection
 
     // actions
     const removeLTARRef = async (row: Row, value: Record<string, any>, column: ColumnType) => {
-      if (isHm(column) || isMm(column)) {
+      if (isHm(column) || isMm(column) || isMMOrMMLike(column)) {
         getRowLtarHelpers(row)[column.title!]?.splice(getRowLtarHelpers(row)[column.title!]?.indexOf(value), 1)
       } else if (isBt(column) || isOo(column)) {
         getRowLtarHelpers(row)[column.title!] = null

@@ -7,7 +7,6 @@ import { forcedNextTick } from '../../utils/browserUtils'
 const column = inject(ColumnInj)!
 
 const cellValue = inject(CellValueInj)!
-
 const row = inject(RowInj)!
 
 const reloadRowTrigger = inject(ReloadRowDataHookInj, createEventHook())

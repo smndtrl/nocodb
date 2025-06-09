@@ -32,10 +32,18 @@ const [useProvideSmartsheetLtarHelpers, useSmartsheetLtarHelpers] = useInjection
           return message.info(t('msg.info.valueAlreadyInList'))
         }
 
-        if (Array.isArray(value)) {
-          getRowLtarHelpers(row)[column.title!]!.push(...value)
+        // if OO or MO, we only set with new value and ditch the rest
+        if ([RelationTypes.ONE_TO_ONE, RelationTypes.MANY_TO_ONE].includes(column.colOptions.type)) {
+          if (!Array.isArray(value)) {
+            getRowLtarHelpers(row)[column.title!]!.splice(0, getRowLtarHelpers(row)[column.title!]!.length)
+            getRowLtarHelpers(row)[column.title!]!.push(value)
+          }
         } else {
-          getRowLtarHelpers(row)[column.title!]!.push(value)
+          if (Array.isArray(value)) {
+            getRowLtarHelpers(row)[column.title!]!.push(...value)
+          } else {
+            getRowLtarHelpers(row)[column.title!]!.push(value)
+          }
         }
       } else if (isBt(column) || isOo(column)) {
         getRowLtarHelpers(row)[column.title!] = value

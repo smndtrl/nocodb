@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { ColumnType, LinkToAnotherRecordType } from 'nocodb-sdk'
-import { RelationTypes, UITypes, isDateOrDateTimeCol, isLinksOrLTAR } from 'nocodb-sdk'
+import { RelationTypes, UITypes, isDateOrDateTimeCol, isLinksOrLTAR, isMMOrMMLike } from 'nocodb-sdk'
 import InboxIcon from '~icons/nc-icons/inbox'
 
 const props = defineProps<{ modelValue: boolean; column: any; hideBackBtn?: boolean }>()
@@ -152,7 +152,11 @@ const newRowState = computed(() => {
     const colOpt1 = col?.colOptions as LinkToAnotherRecordType
     if (colOpt1?.fk_related_model_id !== meta.value.id) return false
 
-    if (colOpt.type === RelationTypes.MANY_TO_MANY && colOpt1?.type === RelationTypes.MANY_TO_MANY) {
+    if (
+      [colOpt.type, colOpt1.type].includes(RelationTypes.MANY_TO_MANY) ||
+      isMMOrMMLike(injectedColumn!.value) ||
+      isMMOrMMLike(col)
+    ) {
       return (
         colOpt.fk_parent_column_id === colOpt1.fk_child_column_id && colOpt.fk_child_column_id === colOpt1.fk_parent_column_id
       )

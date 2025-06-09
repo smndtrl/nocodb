@@ -1,20 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import {
   isLinksOrLTAR,
+  isMMOrMMLike,
+  NcApiVersion,
   ncIsNumber,
   RelationTypes,
   ViewTypes,
 } from 'nocodb-sdk';
 import { validatePayload } from 'src/helpers';
-import { NcApiVersion } from 'nocodb-sdk';
-import type { LinkToAnotherRecordColumn } from '~/models';
 import type { NcContext } from '~/interface/config';
-import { nocoExecute } from '~/utils';
-import { Column, Model, Source, View } from '~/models';
-import { DatasService } from '~/services/datas.service';
+import type { LinkToAnotherRecordColumn } from '~/models';
 import { NcError } from '~/helpers/catchError';
 import getAst from '~/helpers/getAst';
 import { PagedResponseImpl } from '~/helpers/PagedResponse';
+import { Column, Model, Source, View } from '~/models';
+import { DatasService } from '~/services/datas.service';
+import { nocoExecute } from '~/utils';
 import NcConnectionMgrv2 from '~/utils/common/NcConnectionMgrv2';
 
 @Injectable()
@@ -705,7 +706,7 @@ export class DataTableService {
     const relatedModel = await colOptions.getRelatedTable(refContext);
     await relatedModel.getColumns(refContext);
 
-    if (colOptions.type !== RelationTypes.MANY_TO_MANY) return;
+    if (!isMMOrMMLike(column)) return;
 
     const { dependencyFields } = await getAst(refContext, {
       model: relatedModel,

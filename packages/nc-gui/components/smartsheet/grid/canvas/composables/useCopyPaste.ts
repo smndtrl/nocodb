@@ -7,6 +7,7 @@ import {
   UITypes,
   type ViewType,
   isLinksOrLTAR,
+  isMMOrMMLike,
   isSystemColumn,
   isVirtualCol,
   populateUniqueFileName,
@@ -840,7 +841,7 @@ export function useCopyPaste({
       // This will used to reload view data if it is self link column
       const isSelfLinkColumn = columnObj.fk_model_id === columnObj.colOptions?.fk_related_model_id
 
-      if (isMm(columnObj) && rowObj) {
+      if (isMMOrMMLike(columnObj) && rowObj) {
         mmClearResult = await cleaMMCell(rowObj, columnObj)
       }
 
@@ -907,7 +908,7 @@ export function useCopyPaste({
             ) {
               if (isBt(columnObj) || isOo(columnObj)) {
                 await clearLTARCell(rowObj, columnObj)
-              } else if (isMm(columnObj)) {
+              } else if (isMMOrMMLike(columnObj)) {
                 await cleaMMCell(rowObj, columnObj)
               }
               activeCell.value.column = ctx.col

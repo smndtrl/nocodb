@@ -12,6 +12,7 @@ import {
   isCreatedOrLastModifiedByCol,
   isCreatedOrLastModifiedTimeCol,
   isLinksOrLTAR,
+  isMMOrMMLike,
   isOrderCol,
   isSystemColumn,
   isVirtualCol,
@@ -523,7 +524,7 @@ async function clearCell(ctx: { row: number; col: number } | null, skipUpdate = 
     // This will used to reload view data if it is self link column
     const isSelfLinkColumn = columnObj.fk_model_id === columnObj.colOptions?.fk_related_model_id
 
-    if (isMm(columnObj) && rowObj) {
+    if (isMMOrMMLike(columnObj) && rowObj) {
       mmClearResult = await cleaMMCell(rowObj, columnObj)
     }
 
@@ -585,7 +586,7 @@ async function clearCell(ctx: { row: number; col: number } | null, skipUpdate = 
           if (rowObj && rowId === extractPkFromRow(rowObj.row, meta.value?.columns as ColumnType[]) && columnObj.id === col.id) {
             if (isBt(columnObj) || isOo(columnObj)) {
               await clearLTARCell(rowObj, columnObj)
-            } else if (isMm(columnObj)) {
+            } else if (isMMOrMMLike(columnObj)) {
               await cleaMMCell(rowObj, columnObj)
             }
             // eslint-disable-next-line @typescript-eslint/no-use-before-define

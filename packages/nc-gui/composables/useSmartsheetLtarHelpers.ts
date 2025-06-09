@@ -188,7 +188,7 @@ const [useProvideSmartsheetLtarHelpers, useSmartsheetLtarHelpers] = useInjection
         if (row.rowMeta.new) {
           getRowLtarHelpers(row)[column.title!] = null
         } else {
-          if ((<LinkToAnotherRecordType>column.colOptions)?.type === RelationTypes.MANY_TO_MANY) {
+          if (isMMOrMMLike(column)) {
             if (!row.row[column.title!]) return
 
             const result = await $api.dbDataTableRow.nestedListCopyPasteOrDeleteAll(

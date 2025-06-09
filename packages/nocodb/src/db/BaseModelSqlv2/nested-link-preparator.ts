@@ -1,4 +1,9 @@
-import { isLTARMMOrMMLike, type NcRequest, RelationTypes } from 'nocodb-sdk';
+import {
+  getAuditRelation,
+  isLTARMMOrMMLike,
+  type NcRequest,
+  RelationTypes,
+} from 'nocodb-sdk';
 import type { IBaseModelSqlV2 } from '~/db/IBaseModelSqlV2';
 import {
   extractIdPropIfObjectOrReturn,
@@ -292,13 +297,23 @@ export class NestedLinkPreparator {
             }
             break;
           case RelationTypes.MANY_TO_MANY: {
-            if (colOptions.type === RelationTypes.ONE_TO_MANY) {
+            if (!Array.isArray(nestedData)) continue;
+
+            const unlinkedIds: { rowId: string; linkId: string }[] = [];
+            if (
+              [RelationTypes.ONE_TO_MANY, RelationTypes.ONE_TO_ONE].includes(
+                colOptions.type as RelationTypes,
+              )
+            ) {
               postInsertOps.push(async (_rowId) => {
                 const parentModel = await colOptions
                   .getParentColumn(baseModel.context)
                   .then((c) => c.getModel(baseModel.context));
                 await parentModel.getColumns(baseModel.context);
                 const parentMMCol = await colOptions.getMMParentColumn(
+                  baseModel.context,
+                );
+                const childMMCol = await colOptions.getMMChildColumn(
                   baseModel.context,
                 );
                 const mmModel = await colOptions.getMMModel(baseModel.context);
@@ -309,6 +324,15 @@ export class NestedLinkPreparator {
                   ),
                 );
 
+                const unlinkedIdFromDb = await baseModel
+                  .dbDriver(baseModel.getTnPath(mmModel.table_name))
+                  .select({
+                    linkId: childMMCol.column_name,
+                    rowId: parentMMCol.column_name,
+                  })
+                  .whereIn(parentMMCol.column_name, relatedIds);
+                unlinkedIds.push(...unlinkedIdFromDb.filter((k) => k.linkId));
+
                 return baseModel
                   .dbDriver(baseModel.getTnPath(mmModel.table_name))
                   .delete()
@@ -316,7 +340,6 @@ export class NestedLinkPreparator {
                   .toQuery();
               });
             }
-            if (!Array.isArray(nestedData)) continue;
             postInsertOps.push(async (rowId) => {
               const parentModel = await colOptions
                 .getParentColumn(baseModel.context)
@@ -360,7 +383,7 @@ export class NestedLinkPreparator {
                   refModel,
                   refDisplayValue: '',
                   displayValue: '',
-                  type: RelationTypes.MANY_TO_MANY,
+                  type: getAuditRelation(refChildCol),
                 });
 
                 await baseModel.afterAddChild({
@@ -374,7 +397,35 @@ export class NestedLinkPreparator {
                   refModel: baseModel.model,
                   refDisplayValue: '',
                   displayValue: '',
-                  type: RelationTypes.MANY_TO_MANY,
+                  type: getAuditRelation(col),
+                });
+              }
+              for (const unlink of unlinkedIds) {
+                await baseModel.afterRemoveChild({
+                  columnTitle: col.title,
+                  columnId: col.id,
+                  refColumnTitle: refChildCol.title,
+                  rowId: unlink.linkId,
+                  refRowId: unlink.rowId,
+                  req,
+                  model: baseModel.model,
+                  refModel,
+                  refDisplayValue: '',
+                  displayValue: '',
+                  type: getAuditRelation(refChildCol),
+                });
+                await baseModel.afterRemoveChild({
+                  columnTitle: refChildCol.title,
+                  columnId: refChildCol.id,
+                  refColumnTitle: col.title,
+                  rowId: unlink.rowId,
+                  refRowId: unlink.linkId,
+                  req,
+                  model: refModel,
+                  refModel: baseModel.model,
+                  refDisplayValue: '',
+                  displayValue: '',
+                  type: getAuditRelation(col),
                 });
               }
             });

@@ -165,8 +165,7 @@ const parseConditionV2 = async (
 
       if (
         column.uidt === UITypes.Lookup ||
-        column.uidt === UITypes.LinkToAnotherRecord ||
-        column.uidt === UITypes.LinkToAnotherRecordV2
+        column.uidt === UITypes.LinkToAnotherRecord
       ) {
         const model = await column.getModel(context);
         const lkQb = await generateLookupSelectQuery({

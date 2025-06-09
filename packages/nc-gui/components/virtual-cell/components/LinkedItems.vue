@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { type ColumnType, type LinkToAnotherRecordType, isDateOrDateTimeCol } from 'nocodb-sdk'
-import { RelationTypes, isLinksOrLTAR } from 'nocodb-sdk'
+import { RelationTypes, isLinksOrLTAR, isMMOrMMLike } from 'nocodb-sdk'
 
 interface Prop {
   modelValue?: boolean
@@ -122,7 +122,11 @@ const newRowState = computed(() => {
     const colOpt1 = col?.colOptions as LinkToAnotherRecordType
     if (colOpt1?.fk_related_model_id !== meta.value.id) return false
 
-    if (colOpt.type === RelationTypes.MANY_TO_MANY && colOpt1?.type === RelationTypes.MANY_TO_MANY) {
+    if (
+      isMMOrMMLike(injectedColumn!.value) ||
+      isMMOrMMLike(col) ||
+      (colOpt.type === RelationTypes.MANY_TO_MANY && colOpt1?.type === RelationTypes.MANY_TO_MANY)
+    ) {
       return (
         colOpt.fk_parent_column_id === colOpt1.fk_child_column_id && colOpt.fk_child_column_id === colOpt1.fk_parent_column_id
       )
@@ -136,7 +140,7 @@ const newRowState = computed(() => {
   const relatedTableColOpt = colInRelatedTable?.colOptions as LinkToAnotherRecordType
   if (!relatedTableColOpt) return {}
 
-  if (relatedTableColOpt.type === RelationTypes.BELONGS_TO) {
+  if (!isMMOrMMLike(colInRelatedTable) && relatedTableColOpt.type === RelationTypes.BELONGS_TO) {
     return {
       [colInRelatedTable.title as string]: row?.value?.row,
     }

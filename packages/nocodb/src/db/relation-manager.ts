@@ -65,6 +65,7 @@ export class RelationManager {
       childContext: NcContext;
       mmContext: NcContext;
       refContext: NcContext;
+      isReversed: boolean;
     },
   ) {}
 
@@ -128,6 +129,7 @@ export class RelationManager {
       dbDriver: baseModel.dbDriver,
       model: childTable,
     });
+    const isReversed = RelationManager.isRelationReversed(column, colOptions);
     return new RelationManager({
       baseModel,
       relationColumn: column,
@@ -136,9 +138,7 @@ export class RelationManager {
       childColumn,
       childLTARColumn: getRelatedLinksColumn(
         column,
-        RelationManager.isRelationReversed(column, colOptions)
-          ? parentTable
-          : childTable,
+        isReversed ? parentTable : childTable,
       ),
       childTable,
       childBaseModel,
@@ -150,16 +150,13 @@ export class RelationManager {
       childId:
         // in bt or mm child id and row id is swapped
         // due to table definition
-        RelationManager.isRelationReversed(column, colOptions)
-          ? id.rowId
-          : id.childId,
-      parentId: RelationManager.isRelationReversed(column, colOptions)
-        ? id.childId
-        : id.rowId,
+        isReversed ? id.rowId : id.childId,
+      parentId: isReversed ? id.childId : id.rowId,
       parentContext,
       childContext,
       refContext,
       mmContext,
+      isReversed,
     });
   }
 
@@ -740,11 +737,16 @@ export class RelationManager {
         break;
     }
 
+    const isReversed = this.relationContext.isReversed;
     this.auditUpdateObj.push({
       rowId: parentId,
       refRowId: childId,
       opSubType: AuditOperationSubTypes.LINK_RECORD,
-      type: getAuditRelation(colOptions.type as RelationTypes),
+      type: getAuditRelation(
+        isReversed
+          ? getOppositeRelationType(colOptions.type)
+          : (colOptions.type as RelationTypes),
+      ),
       direction: 'parent_child',
     });
 
@@ -752,7 +754,11 @@ export class RelationManager {
       rowId: childId,
       refRowId: parentId,
       opSubType: AuditOperationSubTypes.LINK_RECORD,
-      type: getAuditRelation(getOppositeRelationType(colOptions.type)),
+      type: getAuditRelation(
+        isReversed
+          ? (colOptions.type as RelationTypes)
+          : getOppositeRelationType(colOptions.type),
+      ),
       direction: 'child_parent',
     });
 

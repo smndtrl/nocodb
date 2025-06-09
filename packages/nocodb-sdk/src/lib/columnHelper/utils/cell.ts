@@ -206,9 +206,9 @@ export const isMMOrMMLike = (
 export const getAuditRelation = (baseRelationType: RelationTypes) => {
   switch (baseRelationType) {
     case RelationTypes.MANY_TO_ONE:
-      return RelationTypes.HAS_MANY;
-    case RelationTypes.ONE_TO_MANY:
       return RelationTypes.BELONGS_TO;
+    case RelationTypes.ONE_TO_MANY:
+      return RelationTypes.HAS_MANY;
     default:
       return baseRelationType;
   }

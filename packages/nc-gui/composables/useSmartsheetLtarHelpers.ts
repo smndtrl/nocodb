@@ -127,7 +127,11 @@ const [useProvideSmartsheetLtarHelpers, useSmartsheetLtarHelpers] = useInjection
         if (row.rowMeta.new) {
           getRowLtarHelpers(row)[column.title!] = null
         } else {
-          if ([RelationTypes.BELONGS_TO, RelationTypes.ONE_TO_ONE].includes((<LinkToAnotherRecordType>column.colOptions)?.type)) {
+          const isMmLike = isMMOrMMLike(column)
+          if (
+            !isMmLike &&
+            [RelationTypes.BELONGS_TO, RelationTypes.ONE_TO_ONE].includes((<LinkToAnotherRecordType>column.colOptions)?.type)
+          ) {
             if (!row.row[column.title!]) return
             await $api.dbTableRow.nestedRemove(
               NOCO,

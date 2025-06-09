@@ -2,7 +2,7 @@ import { customAlphabet } from 'nanoid';
 import {
   isCreatedOrLastModifiedByCol,
   isCreatedOrLastModifiedTimeCol,
-  isLTARMMOrMMLike,
+  isMMOrMMLike,
   isOrderCol,
   isSystemColumn,
   isVirtualCol,
@@ -201,7 +201,7 @@ export function getRelatedLinksColumn(
   return relatedModel.columns.find((c: Column) => {
     if (
       column.colOptions?.type === RelationTypes.MANY_TO_MANY ||
-      isLTARMMOrMMLike(c)
+      isMMOrMMLike(c)
     ) {
       return (
         column.colOptions.fk_mm_child_column_id ===

@@ -292,6 +292,30 @@ export class NestedLinkPreparator {
             }
             break;
           case RelationTypes.MANY_TO_MANY: {
+            if (colOptions.type === RelationTypes.ONE_TO_MANY) {
+              postInsertOps.push(async (_rowId) => {
+                const parentModel = await colOptions
+                  .getParentColumn(baseModel.context)
+                  .then((c) => c.getModel(baseModel.context));
+                await parentModel.getColumns(baseModel.context);
+                const parentMMCol = await colOptions.getMMParentColumn(
+                  baseModel.context,
+                );
+                const mmModel = await colOptions.getMMModel(baseModel.context);
+                const relatedIds = nestedData.map((r) =>
+                  extractIdPropIfObjectOrReturn(
+                    r,
+                    parentModel.primaryKey.title,
+                  ),
+                );
+
+                return baseModel
+                  .dbDriver(baseModel.getTnPath(mmModel.table_name))
+                  .delete()
+                  .whereIn(parentMMCol.column_name, relatedIds)
+                  .toQuery();
+              });
+            }
             if (!Array.isArray(nestedData)) continue;
             postInsertOps.push(async (rowId) => {
               const parentModel = await colOptions
@@ -313,6 +337,7 @@ export class NestedLinkPreparator {
                 ),
                 [childMMCol.column_name]: rowId,
               }));
+
               return baseModel
                 .dbDriver(baseModel.getTnPath(mmModel.table_name))
                 .insert(rows)

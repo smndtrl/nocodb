@@ -1,5 +1,5 @@
-import { type ColumnType, type RollupType, UITypes, getRenderAsTextFunForUiType, parseProp } from 'nocodb-sdk'
-import type { LinkToAnotherRecordType } from 'nocodb-sdk'
+import { UITypes, getRenderAsTextFunForUiType, parseProp } from 'nocodb-sdk'
+import type { ColumnType, LinkToAnotherRecordType, RollupType } from 'nocodb-sdk'
 import rfdc from 'rfdc'
 import { isBoxHovered } from '../utils/canvas'
 import { LinksCellRenderer } from './Links'
@@ -116,7 +116,7 @@ export const RollupCellRenderer: CellRenderer = {
         }
         return false
       }
-      
+
       // When not readonly, allow normal interaction
       if (!selected && !isDoubleClick) return false
 

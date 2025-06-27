@@ -589,7 +589,12 @@ const onDeleteColumn = () => {
       :arrow="false"
     >
       <template #title>
-        {{ $t('tooltip.dataInThisFieldCantBeManuallyEdited') }}
+        <template v-if="isRollupAsLink(column)">
+          {{ $t('tooltip.permissionInheritFromLTAR') }}
+        </template>
+        <template v-else>
+          {{ $t('tooltip.dataInThisFieldCantBeManuallyEdited') }}
+        </template>
       </template>
 
       <PaymentUpgradeBadgeProvider :feature="PlanFeatureTypes.FEATURE_TABLE_AND_FIELD_PERMISSIONS">

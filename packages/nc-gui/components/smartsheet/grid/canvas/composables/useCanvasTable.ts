@@ -375,8 +375,8 @@ export function useCanvasTable({
         )
         const sqlUi = sqlUis.value[f.source_id] ?? Object.values(sqlUis.value)[0]
         const isCellEditable =
-          showReadonlyColumnTooltip(f) ||
-          !showEditRestrictedColumnTooltip(f) ||
+          !showReadonlyColumnTooltip(f) &&
+          !showEditRestrictedColumnTooltip(f) &&
           isAllowed(PermissionEntity.FIELD, f.id, PermissionKey.RECORD_FIELD_EDIT)
 
         return {

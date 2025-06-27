@@ -1674,6 +1674,7 @@
     "goToPermissionsOverview": "Go to Permissions Overview"
   },
   "tooltip": {
+    "permissionInheritFromLTAR": "Permissions are inherited from the associated Link column",
     "includeUserHint": "The user who triggered the webhook will be included in the payload as a 'user' object.",
     "crossBase": "Link records from a table in a different base",
     "leaveWorkspace": "Each workspace must have at least one owner. Please assign another user as the Owner before leaving the workspace. If you are the last member, consider deleting the workspace instead.",

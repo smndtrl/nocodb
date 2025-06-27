@@ -1,4 +1,5 @@
 import { type ColumnType, type RollupType, UITypes, getRenderAsTextFunForUiType, parseProp } from 'nocodb-sdk'
+import type { LinkToAnotherRecordType } from 'nocodb-sdk'
 import rfdc from 'rfdc'
 import { isBoxHovered } from '../utils/canvas'
 import { LinksCellRenderer } from './Links'
@@ -22,7 +23,7 @@ export const RollupCellRenderer: CellRenderer = {
 
     // Check if this rollup should be rendered as links
     if (columnMeta?.showAsLinks) {
-      // Use the Links renderer - let the component handle readonly state
+      // Use the Links renderer with all the necessary props for proper permission handling
       return LinksCellRenderer.render?.(ctx, {
         ...props,
         column: {
@@ -32,11 +33,20 @@ export const RollupCellRenderer: CellRenderer = {
             ...parseProp(relatedColObj?.meta),
             ...parseProp(column?.meta),
           },
+          // Preserve the relation column's colOptions for proper LTAR functionality
+          colOptions: relatedColObj?.colOptions,
         },
+        // Ensure all permission-related props are passed through
+        readonly: props.readonly,
+        isUnderLookup: props.isUnderLookup,
+        formula: props.formula,
       })
     }
 
-    const relatedTableMeta = metas?.[(relatedColObj.colOptions as RollupType)?.fk_related_model_id]
+    // For LinkToAnotherRecordType, we need to use fk_related_model_id
+    const relatedColOptions = relatedColObj?.colOptions as LinkToAnotherRecordType
+    const relatedModelId = relatedColOptions?.fk_related_model_id
+    const relatedTableMeta = relatedModelId ? metas?.[relatedModelId] : undefined
 
     const childColumn = clone((relatedTableMeta?.columns || []).find((c: ColumnType) => c.id === colOptions?.fk_rollup_column_id))
 
@@ -90,11 +100,24 @@ export const RollupCellRenderer: CellRenderer = {
     renderCell(ctx, renderProps.column, renderProps)
   },
   async handleClick(props) {
-    const { column, row, getCellPosition, mousePosition, makeCellEditable, selected, isDoubleClick } = props
+    const { column, row, getCellPosition, mousePosition, makeCellEditable, selected, isDoubleClick, readonly } = props
     const columnMeta = parseProp(column.columnObj?.meta)
 
-    // If this rollup should be rendered as links, handle the click directly
+    // If this rollup should be rendered as links, handle permission checks
     if (columnMeta?.showAsLinks) {
+      // Check permissions first - inherit the same logic as Links component
+      // In Links renderer: if (selected && !readonly) shows the plus icon
+      // So when readonly is true, no plus icon should show and clicks should be ignored for editing
+      if (readonly) {
+        // When readonly, still allow expanding/viewing the rollup content
+        if (selected || isDoubleClick) {
+          makeCellEditable(row, column)
+          return true
+        }
+        return false
+      }
+      
+      // When not readonly, allow normal interaction
       if (!selected && !isDoubleClick) return false
 
       const rowIndex = row.rowMeta.rowIndex!
@@ -107,7 +130,7 @@ export const RollupCellRenderer: CellRenderer = {
         isBoxHovered({ x: x + width - 16 - padding, y: y + 7, height: buttonSize, width: buttonSize }, mousePosition) ||
         isBoxHovered({ x: x + padding, y, height, width: width - padding * 2 }, mousePosition)
       ) {
-        // Make the ORIGINAL rollup column editable, not the extracted relation column
+        // Make the rollup column editable
         makeCellEditable(row, column)
         return true
       }
@@ -116,13 +139,22 @@ export const RollupCellRenderer: CellRenderer = {
     return false
   },
   async handleKeyDown(props) {
-    const { column, row, e, makeCellEditable } = props
+    const { column, row, e, makeCellEditable, readonly } = props
     const columnMeta = parseProp(column.columnObj?.meta)
 
-    // If this rollup should be rendered as links, handle keyboard events
+    // If this rollup should be rendered as links, handle permission checks
     if (columnMeta?.showAsLinks) {
+      // Check permissions first - when readonly, only allow expand keys
+      if (readonly) {
+        if (isExpandCellKey(e)) {
+          makeCellEditable(row, column)
+          return true
+        }
+        return false
+      }
+
+      // When not readonly, allow normal keyboard interaction
       if (isExpandCellKey(e)) {
-        // Make the ORIGINAL rollup column editable, not the extracted relation column
         makeCellEditable(row, column)
         return true
       }

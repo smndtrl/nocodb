@@ -14,17 +14,27 @@ export const RollupCellRenderer: CellRenderer = {
     const colOptions = column.colOptions as RollupType
     const columnMeta = parseProp(column.meta)
 
-    // Check if this rollup should be rendered as links
-    if (columnMeta?.showAsLinks) {
-      // Use the Links renderer - let the component handle readonly state
-      return LinksCellRenderer.render?.(ctx, props)
-    }
-
     const relatedColObj = metas?.[column.fk_model_id!]?.columns?.find(
       (c: ColumnType) => c.id === colOptions?.fk_relation_column_id,
     ) as ColumnType
 
     if (!relatedColObj) return
+
+    // Check if this rollup should be rendered as links
+    if (columnMeta?.showAsLinks) {
+      // Use the Links renderer - let the component handle readonly state
+      return LinksCellRenderer.render?.(ctx, {
+        ...props,
+        column: {
+          ...column,
+          uidt: UITypes.Links,
+          meta: {
+            ...parseProp(column?.meta),
+            ...parseProp(relatedColObj?.meta),
+          },
+        },
+      })
+    }
 
     const relatedTableMeta = metas?.[(relatedColObj.colOptions as RollupType)?.fk_related_model_id]
 

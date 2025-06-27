@@ -1,4 +1,5 @@
 import { type ColumnType, type RollupType, UITypes, getRenderAsTextFunForUiType } from 'nocodb-sdk'
+import { LinksCellRenderer } from './Links'
 
 import rfdc from 'rfdc'
 
@@ -11,14 +12,21 @@ export const RollupCellRenderer: CellRenderer = {
     if (!isValidValue(value)) return
 
     const colOptions = column.colOptions as RollupType
+    const columnMeta = parseProp(column.meta)
+
+    // Check if this rollup should be rendered as links
+    if (columnMeta?.showAsLinks) {
+      // Use the Links renderer - let the component handle readonly state
+      return LinksCellRenderer.render?.(ctx, props)
+    }
 
     const relatedColObj = metas?.[column.fk_model_id!]?.columns?.find(
-      (c) => c.id === colOptions?.fk_relation_column_id,
+      (c: any) => c.id === colOptions?.fk_relation_column_id,
     ) as ColumnType
 
     if (!relatedColObj) return
 
-    const relatedTableMeta = metas?.[relatedColObj.colOptions?.fk_related_model_id]
+    const relatedTableMeta = metas?.[(relatedColObj.colOptions as any)?.fk_related_model_id]
 
     const childColumn = clone((relatedTableMeta?.columns || []).find((c: ColumnType) => c.id === colOptions?.fk_rollup_column_id))
 
@@ -70,5 +78,29 @@ export const RollupCellRenderer: CellRenderer = {
     }
 
     renderCell(ctx, renderProps.column, renderProps)
+  },
+  async handleClick(props) {
+    const { column } = props
+    const columnMeta = parseProp((column as any).meta)
+
+    // If this rollup should be rendered as links, always delegate to Links handler
+    // The readonly/editable behavior will be handled by the component itself
+    if (columnMeta?.showAsLinks) {
+      return LinksCellRenderer.handleClick?.(props) || false
+    }
+
+    return false
+  },
+  async handleKeyDown(props) {
+    const { column } = props
+    const columnMeta = parseProp((column as any).meta)
+
+    // If this rollup should be rendered as links, always delegate to Links handler
+    // The readonly/editable behavior will be handled by the component itself
+    if (columnMeta?.showAsLinks) {
+      return LinksCellRenderer.handleKeyDown?.(props) || false
+    }
+
+    return false
   },
 }

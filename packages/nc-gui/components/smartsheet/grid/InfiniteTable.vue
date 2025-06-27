@@ -16,8 +16,9 @@ import {
   isSystemColumn,
   isVirtualCol,
 } from 'nocodb-sdk'
-
 import axios from 'axios'
+import { isRollupAsLink } from '../../../utils/virtualCell'
+
 import { useColumnDrag } from './useColumnDrag'
 import { useRowDragging } from './useRowDragging'
 import { type CellRange, NavigateDir, type Row, type ViewActionState } from '#imports'
@@ -471,7 +472,7 @@ const isReadonly = (col: ColumnType) => {
   return (
     isSystemColumn(col) ||
     isLookup(col) ||
-    isRollup(col) ||
+    (isRollup(col) && !isRollupAsLink(col)) ||
     isFormula(col) ||
     isButton(col) ||
     isVirtualCol(col) ||

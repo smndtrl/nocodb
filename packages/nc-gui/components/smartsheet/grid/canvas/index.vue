@@ -1581,7 +1581,7 @@ async function handleMouseUp(e: MouseEvent, _elementMap: CanvasElement) {
         return
       }
     }
-    
+
     if (NO_EDITABLE_CELL.includes(columnUIType)) return
 
     const supportedVirtualColumns = [UITypes.Barcode, UITypes.QrCode, UITypes.Lookup]

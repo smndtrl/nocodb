@@ -8,7 +8,7 @@ import {
   isReadonly,
   isSystemColumn,
   isVirtualCol,
-  parseProp
+  parseProp,
 } from 'nocodb-sdk'
 import type { ButtonType, ColumnType, TableType, UserType, ViewType } from 'nocodb-sdk'
 import type { WritableComputedRef } from '@vue/reactivity'

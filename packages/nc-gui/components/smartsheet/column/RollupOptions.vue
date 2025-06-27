@@ -230,15 +230,14 @@ const enableFormattingOptions = computed(() => {
       uidt = colMeta?.display_type
     }
   }
-  const validFunctions = getRenderAsTextFunForUiType((uidt as UITypes) || UITypes.SingleLineText)
+  const validFunctions = getRenderAsTextFunForUiType(uidt)
 
   return validFunctions.includes(vModel.value.rollup_function)
 })
 
 const showAsLinksOption = computed(() => {
-  // Show "Show as links" option only for count-based rollup functions
-  const countFunctions = ['count', 'countDistinct']
-  return countFunctions.includes(vModel.value.rollup_function)
+  // Show "Show as links" option only for count rollup function
+  return vModel.value.rollup_function === 'count'
 })
 </script>
 
@@ -357,9 +356,9 @@ const showAsLinksOption = computed(() => {
       <a-select
         v-if="vModel.meta?.precision || vModel.meta?.precision === 0"
         v-model:value="vModel.meta.precision"
-        :disabled="isMetaReadOnly"
+        :disabled="!!isMetaReadOnly"
         dropdown-class-name="nc-dropdown-decimal-format"
-        @change="(value: any) => onPrecisionChange(value as number)"
+        @change="onPrecisionChange"
       >
         <template #suffixIcon>
           <GeneralIcon icon="arrowDown" class="text-gray-700" />
@@ -388,13 +387,6 @@ const showAsLinksOption = computed(() => {
       <div class="flex items-center gap-1">
         <NcSwitch v-if="vModel.meta" v-model:checked="vModel.meta.showAsLinks">
           <div class="text-sm text-gray-800 select-none">{{ $t('labels.showRolledUpCountAsLinks') }}</div>
-        </NcSwitch>
-      </div>
-    </a-form-item>
-    <a-form-item v-if="showAsLinksOption && vModel.meta?.showAsLinks">
-      <div class="flex items-center gap-1">
-        <NcSwitch v-if="vModel.meta" v-model:checked="vModel.meta.enableLinkActions">
-          <div class="text-sm text-gray-800 select-none">{{ $t('labels.enableLinkActions') }}</div>
         </NcSwitch>
       </div>
     </a-form-item>

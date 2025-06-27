@@ -5,10 +5,15 @@ import {
   type LinkToAnotherRecordType,
   PermissionEntity,
   PermissionKey,
+  type RollupType,
   type TableType,
   UITypes,
   type ViewType,
+  isBt,
   isLinksOrLTAR,
+  isMm,
+  isOo,
+  isRollupAsLink,
   isSystemColumn,
   isVirtualCol,
   populateUniqueFileName,
@@ -140,6 +145,17 @@ export function useCopyPaste({
   const hasEditPermission = computed(() => isUIAllowed('dataEdit'))
 
   function isPasteable(row?: Row, col?: ColumnType, showInfo = false, avoidLtarRestrictions = false) {
+  // Helper function to get the relation column from a rollup column
+  const getRollupRelationColumn = (rollupCol: ColumnType) => {
+    if (!isRollupAsLink(rollupCol)) return null
+
+    const rollupOptions = rollupCol.colOptions as RollupType
+    const relationColumnId = rollupOptions?.fk_relation_column_id
+
+    return fields.value.find((col) => col.id === relationColumnId) || null
+  }
+
+  function isPasteable(row?: Row, col?: ColumnType, showInfo = false) {
     if (!row || !col) {
       if (showInfo) {
         message.toast('Please select a cell to paste')
@@ -148,6 +164,19 @@ export function useCopyPaste({
     }
 
     const restrictEditCell = col.id && !isAllowed(PermissionEntity.FIELD, col.id, PermissionKey.RECORD_FIELD_EDIT)
+
+    // Handle rollup columns that should be treated as links - check the underlying relation column
+    if (isRollupAsLink(col)) {
+      const relationCol = getRollupRelationColumn(col)
+      if (relationCol) {
+        return isPasteable(row, relationCol, showInfo)
+      }
+    }
+
+    // Allow rollup columns with showAsLinks to be pasteable (they will be handled as their relation column)
+    if (col.uidt === UITypes.Rollup && isRollupAsLink(col)) {
+      return true
+    }
 
     // skip pasting virtual columns (including LTAR columns for now) and system columns
     if (isVirtualCol(col) || isSystemColumn(col) || col?.readonly) {
@@ -362,8 +391,16 @@ export function useCopyPaste({
           // Process each cell in the row
           if (!clipboardMatrix[clipboardRowIndex]) continue
           for (let j = 0; j < clipboardMatrix[clipboardRowIndex].length; j++) {
-            const column = colsToPaste[j]
+            let column = colsToPaste[j]
             if (!column) continue
+
+            // Handle rollup columns that should be treated as links
+            if (isRollupAsLink(column)) {
+              const relationCol = getRollupRelationColumn(column)
+              if (relationCol) {
+                column = relationCol
+              }
+            }
 
             if (isPasteable(targetRow, column)) {
               propsToPaste.push(column.title!)
@@ -421,15 +458,41 @@ export function useCopyPaste({
           await bulkUpdateRows?.(updatedRows, propsToPaste, undefined, false, groupPath)
         }
 
+        // Check if any rollup columns with showAsLinks were affected by the paste operation
+        const rollupColumnsToReload = unref(fields).filter(
+          (col, index) => isRollupAsLink(col) && index >= selection.value.start.col && index <= selection.value.end.col,
+        )
+
+        // Reload data for rollup columns to refresh calculated values
+        for (const rollupCol of rollupColumnsToReload) {
+          await syncCellData?.(
+            {
+              row: selection.value.start.row,
+              col: unref(fields).findIndex((f) => f.id === rollupCol.id),
+              updatedColumnTitle: rollupCol.title,
+            },
+            groupPath,
+          )
+        }
+
         if (isTruncated) {
           message.warning(`Paste operation limited to ${MAX_ROWS} rows. Additional rows were truncated.`)
         }
       } else {
         if (selection.value.isSingleCell()) {
           const rowObj = (unref(cachedRows) as Map<number, Row>).get(activeCell.value.row)
-          const columnObj = unref(fields)[activeCell.value.column]
+          let columnObj = unref(fields)[activeCell.value.column]
+          const originalColumnObj = columnObj // Keep reference to original column
 
           if (!rowObj || !columnObj) return
+
+          // Handle rollup columns that should be treated as links - replace them with their relation column
+          if (isRollupAsLink(columnObj)) {
+            const relationColumn = getRollupRelationColumn(columnObj)
+            if (relationColumn) {
+              columnObj = relationColumn
+            }
+          }
 
           // handle belongs to column, skip custom links
           if (isBt(columnObj) && !(columnObj.meta as any)?.custom) {
@@ -467,7 +530,15 @@ export function useCopyPaste({
               ? extractPkFromRow(pasteVal.value, (relatedTableMeta as any)!.columns!)
               : null
 
-            return await syncCellData?.({ ...activeCell.value, updatedColumnTitle: foreignKeyColumn.title }, groupPath)
+            const result = await syncCellData?.({ ...activeCell.value, updatedColumnTitle: foreignKeyColumn.title }, groupPath)
+
+            // If we pasted into a rollup column with showAsLinks, reload data to refresh rollup values
+            if (isRollupAsLink(originalColumnObj)) {
+              // Trigger data reload to update rollup calculations
+              await syncCellData?.({ ...activeCell.value, updatedColumnTitle: originalColumnObj.title }, groupPath)
+            }
+
+            return result
           }
 
           // Handle many-to-many column paste
@@ -615,7 +686,15 @@ export function useCopyPaste({
               })
             }
 
-            return await syncCellData?.(activeCell.value, groupPath)
+            const syncResult = await syncCellData?.(activeCell.value, groupPath)
+
+            // If we pasted into a rollup column with showAsLinks, reload data to refresh rollup values
+            if (isRollupAsLink(originalColumnObj)) {
+              // Trigger data reload to update rollup calculations
+              await syncCellData?.({ ...activeCell.value, updatedColumnTitle: originalColumnObj.title }, groupPath)
+            }
+
+            return syncResult
           }
 
           if (!isPasteable(rowObj, columnObj, true)) {
@@ -832,7 +911,16 @@ export function useCopyPaste({
     const rowObj = cachedRows.value.get(ctx.row)
 
     if (!col || !col?.columnObj || !rowObj) return
-    const columnObj = col.columnObj
+    let columnObj = col.columnObj
+    const originalColumnObj = columnObj
+
+    // Handle rollup columns with showAsLinks - treat them as their underlying relation columns
+    if (isRollupAsLink(columnObj)) {
+      const relationCol = getRollupRelationColumn(columnObj)
+      if (relationCol) {
+        columnObj = relationCol
+      }
+    }
 
     if (
       !columnObj ||
@@ -841,12 +929,12 @@ export function useCopyPaste({
       !hasEditPermission.value ||
       columnObj.readonly ||
       (isSystemColumn(columnObj) && !isLinksOrLTAR(columnObj)) ||
-      (!isLinksOrLTAR(columnObj) && isVirtualCol(columnObj))
+      (!isLinksOrLTAR(columnObj) && isVirtualCol(columnObj) && !isRollupAsLink(originalColumnObj))
     ) {
       if (
         columnObj.readonly ||
         (isSystemColumn(columnObj) && !isLinksOrLTAR(columnObj)) ||
-        (!isLinksOrLTAR(columnObj) && isVirtualCol(columnObj))
+        (!isLinksOrLTAR(columnObj) && isVirtualCol(columnObj) && !isRollupAsLink(originalColumnObj))
       ) {
         message.toast(t('msg.info.computedFieldClearWarning'))
       }
@@ -953,6 +1041,31 @@ export function useCopyPaste({
         reloadViewDataHook.trigger({ shouldShowLoading: false })
       }
 
+      // If we cleared a rollup column with showAsLinks, update the rollup cell and reload data
+      if (isRollupAsLink(originalColumnObj)) {
+        // Immediately update the rollup cell to reflect the cleared relationship
+        // For count rollup function, calculate the new count based on remaining relationships
+        if (originalColumnObj.title && columnObj.title) {
+          const relationshipData = rowObj.row[columnObj.title!]
+          let newRollupValue = 0
+
+          // Calculate new count based on the relationship type and remaining data
+          if (relationshipData) {
+            if (Array.isArray(relationshipData)) {
+              newRollupValue = relationshipData.length
+            } else if (relationshipData && typeof relationshipData === 'object') {
+              newRollupValue = 1
+            }
+          }
+
+          // Update the rollup cell immediately
+          rowObj.row[originalColumnObj.title] = newRollupValue
+        }
+
+        // Trigger data reload to update rollup calculations from server
+        await syncCellData?.({ row: ctx.row, col: ctx.col, updatedColumnTitle: originalColumnObj.title }, groupPath)
+      }
+
       return
     }
 
@@ -1003,12 +1116,47 @@ export function useCopyPaste({
           const columnObj = unref(fields)[cpCol]
           if (!rowObj || !columnObj) return
 
-          const textToCopy = valueToCopy(rowObj, columnObj, {
-            meta: meta.value,
-            metas: metas.value,
-            isPg,
-            isMysql,
-          })
+          // Handle rollup columns that should be treated as links for copying
+          let textToCopy: string
+          if (isRollupAsLink(columnObj)) {
+            const relationCol = getRollupRelationColumn(columnObj)
+            if (relationCol) {
+              // For rollup columns with showAsLinks, create a temporary row object
+              // that has the relation column data with the rollup count as the value
+              const rollupCount = rowObj.row[columnObj.title!] ?? 0
+
+              // Create a temporary row object with the relation column title and rollup count
+              const tempRowObj = {
+                ...rowObj,
+                row: {
+                  ...rowObj.row,
+                  [relationCol.title!]: rollupCount,
+                },
+              }
+
+              // Use the relation column and temp row to get proper LTAR format
+              textToCopy = valueToCopy(tempRowObj, relationCol, {
+                meta: meta.value,
+                metas: metas.value,
+                isPg,
+                isMysql,
+              })
+            } else {
+              textToCopy = valueToCopy(rowObj, columnObj, {
+                meta: meta.value,
+                metas: metas.value,
+                isPg,
+                isMysql,
+              })
+            }
+          } else {
+            textToCopy = valueToCopy(rowObj, columnObj, {
+              meta: meta.value,
+              metas: metas.value,
+              isPg,
+              isMysql,
+            })
+          }
 
           await copy(isValidValue(textToCopy) ? textToCopy : '')
           message.toast(

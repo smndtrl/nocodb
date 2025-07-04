@@ -160,7 +160,11 @@
     "upgradeToUseRowColoring": "Upgrade to use row colouring",
     "upgradeToUseRowColoringSubtitle": "Upgrade to the {plan} plan to colour rows based on field values or conditions, making it easier to scan and prioritize your data.",
     "upgradeToUseTableAndFieldPermissions": "Upgrade to use table and field permissions",
-    "upgradeToUseTableAndFieldPermissionsSubtitle": "Upgrade to the {plan} plan to use table and field permissions, making it easier to manage your data."
+    "upgradeToUseTableAndFieldPermissionsSubtitle": "Upgrade to the {plan} plan to use table and field permissions, making it easier to manage your data.",
+    "upgradeToUseScripts": "Upgrade to use scripts",
+    "upgradeToUseScriptsSubtitle": "Upgrade to the {plan} plan to use scripts to automate workflows or customize logic.",
+    "upgradeToUsePrivateBases": "Upgrade to use private bases",
+    "upgradeToUsePrivateBasesSubtitle": "Upgrade to the {plan} plan to use private bases."
   },
   "general": {
     "script": "Script",
@@ -859,7 +863,7 @@
     "duplicatesFound": "Duplicates found",
     "matchingResultsInRecords": "Matching results in {count} records",
     "tablePermissions": "Table permissions",
-    "fieldPermissions": "Field permissions", 
+    "fieldPermissions": "Field permissions",
     "baseAccessDefaultSubtext": "All members can collaborate based on their workspace role.",
     "baseAccessPrivateSubtext": "Restrict access - only invited members can access this base"
   },

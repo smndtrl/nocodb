@@ -412,7 +412,8 @@
     "permissions": "Permissions",
     "manageAllFields": "Manage all fields",
     "automations": "Automations",
-    "record": "Record"
+    "record": "Record",
+    "baseAccess": "Base Access"
   },
   "objects": {
     "script": "Script",
@@ -858,7 +859,9 @@
     "duplicatesFound": "Duplicates found",
     "matchingResultsInRecords": "Matching results in {count} records",
     "tablePermissions": "Table permissions",
-    "fieldPermissions": "Field permissions"
+    "fieldPermissions": "Field permissions", 
+    "baseAccessDefaultSubtext": "All members can collaborate based on their workspace role.",
+    "baseAccessPrivateSubtext": "Restrict access - only invited members can access this base"
   },
   "labels": {
     "crossBase": "Link to external base",

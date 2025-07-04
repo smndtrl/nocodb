@@ -730,6 +730,7 @@ import NcLogoZohoColored from '~icons/nc-icons-v2/zoho-colored.svg'
 import NcLogoZoho from '~icons/nc-icons-v2/zoho.svg'
 import NcSendAlt from '~icons/nc-icons-v2/send-alt.svg'
 import NcBaseOutline from '~icons/nc-icons-v2/base-outline.svg'
+import NcBasePrivate from '~icons/nc-icons-v2/base-private.svg'
 import NcBaseOutlineDuo from '~icons/nc-icons-v2/base-outline-duo.svg'
 import NcSearchDuo from '~icons/nc-icons-v2/search-duo.svg'
 import NcSettingsDuo from '~icons/nc-icons-v2/settings-duo.svg'
@@ -1716,6 +1717,7 @@ export const iconMap = {
   'sso': MdiCloudKeyOutline,
   'mcp': NcMCP,
   'ncBaseOutline': NcBaseOutline,
+  'ncBasePrivate': NcBasePrivate,
   'ncBaseOutlineDuo': NcBaseOutlineDuo,
   'ncSearchDuo': NcSearchDuo,
   'ncSettingsDuo': NcSettingsDuo,
@@ -4283,6 +4285,10 @@ export const searchableMap = {
   ncBaseOutline: {
     icon: NcBaseOutline,
     keywords: ['base', 'database', 'storage', 'db'],
+  },
+  ncBasePrivate: {
+    icon: NcBasePrivate,
+    keywords: ['base', 'database', 'storage', 'db', 'private', 'locked', 'secure'],
   },
   ncBaseOutlineDuo: {
     icon: NcBaseOutlineDuo,

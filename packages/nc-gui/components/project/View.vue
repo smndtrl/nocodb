@@ -17,7 +17,7 @@ const { openedProject, activeProjectId, basesUser, bases } = storeToRefs(basesSt
 const { activeTables, activeTable } = storeToRefs(useTablesStore())
 const { activeWorkspace } = storeToRefs(useWorkspace())
 
-const { isSharedBase } = useBase()
+const { isSharedBase, isPrivateBase } = storeToRefs(useBase())
 
 const automationStore = useAutomationStore()
 
@@ -182,6 +182,16 @@ onMounted(() => {
               {{ currentBase?.title }}
             </span>
           </NcTooltip>
+          <NcBadge
+            v-if="isPrivateBase"
+            size="xs"
+            class="!text-caption !bg-nc-bg-gray-medium !text-nc-content-gray-subtle2"
+            color="grey"
+            :border="false"
+          >
+            <GeneralIcon icon="ncUser" class="w-4 h-4 mr-1" />
+            {{ $t('general.private') }}
+          </NcBadge>
         </div>
       </div>
 

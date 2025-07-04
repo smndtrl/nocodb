@@ -1412,7 +1412,8 @@
     "useNocoAI": "Use NocoAI",
     "disableNocoAI": "Disable NocoAI",
     "defaultAccess": "Default access",
-    "privateAccess": "Private access"
+    "privateAccess": "Private access",
+    "sharingRestricted": "Sharing restricted"
   },
   "activity": {
     "clickToResolve": "Click to resolve",

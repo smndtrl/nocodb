@@ -1,21 +1,21 @@
-###########
-# Litestream Builder
-###########
-FROM golang:bullseye AS lt-builder
+# ###########
+# # Litestream Builder
+# ###########
+# FROM golang:bullseye AS lt-builder
 
-WORKDIR /usr/src/
+# WORKDIR /usr/src/
 
-RUN apt-get update && apt-get install -y \
-    git \
-    make \
-    gcc \
-    libc-dev \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+# RUN apt-get update && apt-get install -y \
+#     git \
+#     make \
+#     gcc \
+#     libc-dev \
+#     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# build litestream
-RUN git clone https://github.com/benbjohnson/litestream.git litestream
-RUN cd litestream && go install ./cmd/litestream
-RUN cp $GOPATH/bin/litestream /usr/src/lt
+# # build litestream
+# RUN git clone https://github.com/benbjohnson/litestream.git litestream
+# RUN cd litestream && go install ./cmd/litestream
+# RUN cp $GOPATH/bin/litestream /usr/src/lt
 
 ###########
 # Builder
@@ -80,8 +80,8 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copy litestream binary and config file
-COPY --link --from=lt-builder /usr/src/lt /usr/local/bin/litestream
-COPY --link ./docker/litestream.yml /etc/litestream.yml
+# COPY --link --from=lt-builder /usr/src/lt /usr/local/bin/litestream
+# COPY --link ./docker/litestream.yml /etc/litestream.yml
 
 # Copy production code & main entry file
 COPY --link --from=builder /usr/src/app/ /usr/src/app/

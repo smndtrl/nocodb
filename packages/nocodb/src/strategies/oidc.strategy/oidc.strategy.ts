@@ -27,7 +27,7 @@ export class OidcStrategy extends PassportStrategy(Strategy, 'oidc') {
       callbackURL: 'http://localhost:8080/auth/oidc/callback',
       passReqToCallback: true,
       scope: ['openid', 'profile', 'email'],
-      state: true,
+      state: false,
     });
   }
 
@@ -70,7 +70,7 @@ export class OidcStrategy extends PassportStrategy(Strategy, 'oidc') {
       clientSecret: process.env.NC_OIDC_CLIENT_SECRET,
       callbackURL: callbackURL,
       scope: scopes,
-      state: req.query.state,
+      state: req.query.state ?? "dummy-state",
       passReqToCallback: true,
     };
 
